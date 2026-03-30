@@ -33,31 +33,18 @@ Chunks + question sent to Gemini → answer returned
 
 ## Tech Stack
 
-Python backend
+## Tech stack
 
-FastAPI for HTTP API (/upload, /ask)
-uvicorn likely used as ASGI server
-Document handling + PDF parsing
-
-pypdf (PdfReader)
-langchain_text_splitters.RecursiveCharacterTextSplitter
-Embeddings + vector DB
-
-langchain_huggingface or fallback langchain_community.embeddings.HuggingFaceEmbeddings
-langchain_chroma or fallback langchain_community.vectorstores.Chroma
-chromadb under the hood for local vector store persisted in chroma_db
-LLM / RAG
-
-langchain_google_genai.ChatGoogleGenerativeAI for Gemini model (gemini-2.5-flash)
-langchain_core for prompt/chain (ChatPromptTemplate, StrOutputParser, RunnablePassthrough)
-Env/config
-
-python-dotenv (load_dotenv)
-config in .env
-Dependencies file
-
-requirements.txt with all libs above
-Dev: .gitignore for Python artifacts + chroma_db + env files etc.
+| Layer | Library |
+|---|---|
+| **HTTP API** | FastAPI + Uvicorn (ASGI) |
+| **PDF parsing** | pypdf |
+| **Text splitting** | LangChain `RecursiveCharacterTextSplitter` |
+| **Embeddings** | HuggingFace Embeddings (via LangChain) |
+| **Vector store** | ChromaDB (persisted locally in `chroma_db/`) |
+| **LLM** | Google Gemini 2.5 Flash (via `langchain-google-genai`) |
+| **RAG chain** | LangChain Core — `ChatPromptTemplate`, `RunnablePassthrough`, `StrOutputParser` |
+| **Config** | `python-dotenv` — secrets loaded from `.env` |
 
 ## Setup
 
