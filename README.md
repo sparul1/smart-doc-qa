@@ -27,16 +27,37 @@ Question embedded → similar chunks retrieved from ChromaDB
 Chunks + question sent to Gemini → answer returned
 ```
 <img width="1425" height="777" alt="image" src="https://github.com/user-attachments/assets/47addd3e-28c5-415e-965b-8e258d71421d" />
-<img width="1425" height="777" alt="image" src="https://github.com/user-attachments/assets/d07fb63c-81ef-461d-8202-b06a2e1acf42" />
+<img width="1458" height="801" alt="image" src="https://github.com/user-attachments/assets/7613399a-f408-4c7c-bcb5-e354f9183f49" />
+
 
 
 ## Tech Stack
 
-- **Python / FastAPI** — REST API framework
-- **LangChain** — RAG pipeline orchestration
-- **Google Gemini API** — LLM inference and embeddings
-- **ChromaDB** — local vector database
-- **python-dotenv** — environment variable management
+Python backend
+
+FastAPI for HTTP API (/upload, /ask)
+uvicorn likely used as ASGI server
+Document handling + PDF parsing
+
+pypdf (PdfReader)
+langchain_text_splitters.RecursiveCharacterTextSplitter
+Embeddings + vector DB
+
+langchain_huggingface or fallback langchain_community.embeddings.HuggingFaceEmbeddings
+langchain_chroma or fallback langchain_community.vectorstores.Chroma
+chromadb under the hood for local vector store persisted in chroma_db
+LLM / RAG
+
+langchain_google_genai.ChatGoogleGenerativeAI for Gemini model (gemini-2.5-flash)
+langchain_core for prompt/chain (ChatPromptTemplate, StrOutputParser, RunnablePassthrough)
+Env/config
+
+python-dotenv (load_dotenv)
+config in .env
+Dependencies file
+
+requirements.txt with all libs above
+Dev: .gitignore for Python artifacts + chroma_db + env files etc.
 
 ## Setup
 
