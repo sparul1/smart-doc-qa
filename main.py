@@ -1,8 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain.chains import RetrievalQA
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from pypdf import PdfReader
 from dotenv import load_dotenv
 import io, os
@@ -13,7 +16,8 @@ app = FastAPI()
 
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    # Use local embeddings (no API calls needed)
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     vectorstore = Chroma(embedding_function=embeddings, persist_directory="./chroma_db")
     
     contents = await file.read()
@@ -28,10 +32,31 @@ async def upload_document(file: UploadFile = File(...)):
 
 @app.post("/ask")
 async def ask_question(question: str):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    # Use same local embeddings for consistency
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     vectorstore = Chroma(embedding_function=embeddings, persist_directory="./chroma_db")
-    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite")
+    # Use gemini-2.5-flash (available in your API key)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
     retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-    qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
-    result = qa_chain.invoke({"query": question})
-    return {"answer": result["result"]}
+    
+    # Create RAG chain using LCEL
+    template = """Answer the question based only on the following context:
+{context}
+
+Question: {question}
+"""
+    prompt = ChatPromptTemplate.from_template(template)
+    
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+    
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+    
+    answer = rag_chain.invoke(question)
+    return {"answer": answer}
+

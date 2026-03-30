@@ -150,4 +150,5 @@ cython_debug/
 Thumbs.db
 
 # Project specific
+test_models.py
 chroma_db/
